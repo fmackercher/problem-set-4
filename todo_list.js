@@ -1,5 +1,4 @@
 
-const description = document.getElementById('task_description_input').value;
 //const dueTime = document.getElementById('duetime_input').value;
 //const dueDate = document.getElementById('duedate_input').value;
 
@@ -7,10 +6,16 @@ const description = document.getElementById('task_description_input').value;
 // have a separate add task function from click
 function addTask(description, dueTime) {
     const newListElement = document.createElement('li');
-    newListElement.textContent = description + dueTime;
+    newListElement.textContent = description
+    if (dueTime) {
+        const formatDate = new Date(dueTime);
+        newListElement.append(' due ');
+        newListElement.append(formatDate.toLocaleString());
+    }
     task_list.appendChild(newListElement);
     const doneButtonElement = document.createElement('button');
     doneButtonElement.textContent = 'Done';
+    doneButtonElement.classList.add('btn', 'btn-sm', 'btn-outline-danger', 'done');
     newListElement.append(doneButtonElement); // add the button onto the end of the new list element
     doneButtonElement.onclick = function () {
         console.log("clicked done");
@@ -26,10 +31,7 @@ function dateAndTimeToTimestamp(dateInputElement, timeInputElement) {
     if (dueDate && dueTime) { // The user specified both a due date & due time
         //Add the timezone offset to account for the fact that timestamps are specified by UTC
         const timezoneOffset = (new Date()).getTimezoneOffset() * 60 * 1000;
-        console.log(dueDate);
-        console.log(dueTime);
-        console.log(timezoneOffset);
-        return 'due' + dueDate + dueTime + timezoneOffset;
+        return dueDate + dueTime + timezoneOffset;
     } else {
         // if the user did not specify both a due date and due time, return false
         return false;
@@ -41,6 +43,7 @@ function dateAndTimeToTimestamp(dateInputElement, timeInputElement) {
 
 document.getElementById('add_task').onclick = function () {
     //addTask(description);
+    const description = document.getElementById('task_description_input').value;
     const dateInputElement = document.getElementById("duedate_input");
     const timeInputElement = document.getElementById("duetime_input");
     var dateTime = dateAndTimeToTimestamp(dateInputElement, timeInputElement);
@@ -48,11 +51,16 @@ document.getElementById('add_task').onclick = function () {
     console.log(timeInputElement);
     console.log(dateTime);
     addTask(description, dateTime);
+    document.getElementById("task_description_input").value = "";
 }
 
 
-add_task.addEventListener('keyup', (event) => {
-    if (event.keyCode == 13) {
-        addTask(description, dueTime);
+document.getElementById('task_description_input').addEventListener('keydown', (event) => {
+    const description = document.getElementById('task_description_input').value;
+    const dateInputElement = document.getElementById("duedate_input");
+    const timeInputElement = document.getElementById("duetime_input");
+    var dateTime = dateAndTimeToTimestamp(dateInputElement, timeInputElement);
+    if (event.keyCode == 13) { //event.which == enter
+        addTask(description, dateTime);
     }
 })
