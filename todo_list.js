@@ -1,66 +1,187 @@
 
-//const dueTime = document.getElementById('duetime_input').value;
-//const dueDate = document.getElementById('duedate_input').value;
+document.getElementById('show_rhymes').addEventListener('click', fetchRhymes);
+document.getElementById('show_synonyms').addEventListener('click', fetchSynonyms);
 
-// doneButtonElement.id = '' or setAttribute
-// have a separate add task function from click
-function addTask(description, dueTime) {
-    const newListElement = document.createElement('li');
-    newListElement.textContent = description
-    if (dueTime) {
-        const formatDate = new Date(dueTime);
-        newListElement.append(' due ');
-        newListElement.append(formatDate.toLocaleString());
+async function fetchRhymes() {
+    const userRhyme = document.getElementById('word_input').value;
+    document.getElementById("output_description").innerHTML = `Words that rhyme with ${userRhyme}`;
+    async function fetchRhy(word) {
+        const url = 'https://api.datamuse.com/words?rel_rhy=' + userRhyme;
+        const response = await fetch(url);
+        const words = await response.json();
+        return words;
     }
-    task_list.appendChild(newListElement);
-    const doneButtonElement = document.createElement('button');
-    doneButtonElement.textContent = 'Done';
-    doneButtonElement.classList.add('btn', 'btn-sm', 'btn-outline-danger', 'done');
-    newListElement.append(doneButtonElement); // add the button onto the end of the new list element
-    doneButtonElement.onclick = function () {
-        console.log("clicked done");
-        newListElement.remove();
-    }
-}
 
-//Part 3
-function dateAndTimeToTimestamp(dateInputElement, timeInputElement) {
-    const dueDate = dateInputElement.valueAsNumber; // Returns the timestamp at midnight for the given date
-    const dueTime = timeInputElement.valueAsNumber; // Returns the number of milliseconds from midnight to the time
-    console.log(dateInputElement, timeInputElement);
-    if (dueDate && dueTime) { // The user specified both a due date & due time
-        //Add the timezone offset to account for the fact that timestamps are specified by UTC
-        const timezoneOffset = (new Date()).getTimezoneOffset() * 60 * 1000;
-        return dueDate + dueTime + timezoneOffset;
+    const wordList = await fetchRhy(userRhyme);
+    console.log(wordList);
+
+    var container = document.getElementById('word_output');
+    const groupedList = groupBy(wordList, 'numSyllables');
+    console.log(groupedList); //array of another array
+    const resultList = Object.values(groupedList);
+    console.log(resultList);
+    if (resultList.length == 0) {
+        var div = document.createElement("div");
+        div.innerHTML = "(no results)";
+        container.appendChild(div);
     } else {
-        // if the user did not specify both a due date and due time, return false
-        return false;
+        resultList.forEach(result => { //resultListforEach[result]
+            const divEl = document.createElement("span");
+            //add syllable num here i+1 for int + for syll
+            for (i = 0; i < result.length; i++) { //i < result.length; i++
+                const list = document.createElement("li");
+                list.setAttribute('id', 'li_item');
+                const button = document.createElement('button');
+                const text1 = result[i].word;
+                console.log(text1);
+                const listItem = document.createTextNode(text1);
+                list.append(listItem, ' ');
+                button.setAttribute('id', `save_word_${i}`);
+                button.classList.add('btn', 'btn-outline-success');
+                button.innerHTML = "Save";
+                list.appendChild(button);
+                container.appendChild(list);
+                button.addEventListener('click', function () {
+                    document.getElementById('saved_words').append(text1, ', '); //should be on top loop
+                });
+            }
+        })
+        /* for (let i = 0; i < resultList[0].length + resultList[1].length + resultList[2].length; i++) {
+            const list = document.createElement("li");
+            list.setAttribute('id', 'li_item');
+            const button = document.createElement('button');
+            const text1 = resultList[0][i].word; //result.i
+            const listItem = document.createTextNode(text1);
+            list.append(listItem, ' ');
+            button.setAttribute('id', `save_word_${i}`);
+            button.classList.add('btn', 'btn-outline-success');
+            button.innerHTML = "Save";
+            list.appendChild(button);
+            container.appendChild(list);
+            document.getElementById(`save_word_${i}`).addEventListener('click', function () {
+                document.getElementById('saved_words').append(text, ', ');
+            });
+        } */
     }
 }
 
-// addTask('buy milk');
-// () calls function now, addTask is function object that will be called on click
 
-document.getElementById('add_task').onclick = function () {
-    //addTask(description);
-    const description = document.getElementById('task_description_input').value;
-    const dateInputElement = document.getElementById("duedate_input");
-    const timeInputElement = document.getElementById("duetime_input");
-    var dateTime = dateAndTimeToTimestamp(dateInputElement, timeInputElement);
-    console.log(dateInputElement);
-    console.log(timeInputElement);
-    console.log(dateTime);
-    addTask(description, dateTime);
-    document.getElementById("task_description_input").value = "";
+async function fetchSynonyms() {
+    const userSyn = document.getElementById('word_input').value;
+    document.getElementById("output_description").innerHTML = `Words with a similar meaning to ${userSyn}`;
+    async function fetchSyn(word) {
+        const url = 'https://api.datamuse.com/words?rel_syn=' + userSyn;
+        const response = await fetch(url);
+        const words = await response.json();
+        return words;
+    }
+    const wordList = await fetchSyn(userSyn);
+    var container = document.getElementById('word_output');
+    if (wordList.length == 0) {
+        var div = document.createElement("div");
+        div.innerHTML = "(no results)";
+        container.appendChild(div);
+    } else {
+        for (let i = 0; i < wordList.length; i++) {
+            const list = document.createElement("li");
+            list.setAttribute('id', 'li_item');
+            const button = document.createElement('button');
+            const text = wordList[i].word;
+            const listItem = document.createTextNode(text);
+            list.append(listItem, ' ');
+            button.setAttribute('id', `save_word_${i}`);
+            button.classList.add('btn', 'btn-outline-success');
+            button.innerHTML = "Save";
+            list.appendChild(button);
+            container.appendChild(list);
+            button.addEventListener('click', function () {
+                document.getElementById('saved_words').append(text, ', ');
+            });
+        }
+    }
+
 }
 
+/*for (var i = 0; i < wordList.length; i++) {
+    (function () {
+        var list = document.createElement("li");
+        var button = document.createElement('button');
+        var text = wordList[i].word;
+        var listItem = document.createTextNode(text);
+        list.appendChild(listItem);
+        button.setAttribute('id', `save_word_${i}`);
+        button.innerHTML = "Save";
+        list.appendChild(button);
+        container.appendChild(list);
+        document.getElementById(`save_word_${i}`).addEventListener('click', function () { makeItHappen(listItem); }, false);
+    }());
+}*/
 
-document.getElementById('task_description_input').addEventListener('keydown', (event) => {
-    const description = document.getElementById('task_description_input').value;
-    const dateInputElement = document.getElementById("duedate_input");
-    const timeInputElement = document.getElementById("duetime_input");
-    var dateTime = dateAndTimeToTimestamp(dateInputElement, timeInputElement);
-    if (event.keyCode == 13) { //event.which == enter
-        addTask(description, dateTime);
+
+
+function groupBy(objects, property) {
+    // If property is not a function, convert it to a function that accepts one argument (an object) and returns that object's
+    // value for property (obj[property])
+    if (typeof property !== 'function') {
+        const propName = property;
+        property = (obj) => obj[propName];
     }
-})
+
+    const groupedObjects = new Map(); // Keys: group names, value: list of items in that group
+    for (const object of objects) {
+        const groupName = property(object);
+        //Make sure that the group exists
+        if (!groupedObjects.has(groupName)) {
+            groupedObjects.set(groupName, []);
+        }
+        groupedObjects.get(groupName).push(object);
+    }
+
+    // Create an object with the results. Sort the keys so that they are in a sensible "order"
+    const result = {};
+    for (const key of Array.from(groupedObjects.keys()).sort()) {
+        result[key] = groupedObjects.get(key);
+    }
+    return result;
+}
+
+/*function fetchRhymes() {
+    const userRhyme = document.getElementById('word_input').value;
+    document.getElementById("output_description").innerHTML = `Words that rhyme with ${userRhyme}`;
+    //document.getElementById('word_output').innerHTML =
+    console.log(userRhyme);
+    const promise = fetch('https://api.datamuse.com/words?rel_rhy=' + userRhyme);
+    promise.then((response) => {
+        console.log("response:", response)
+        return response.text();
+    })
+        .then((data) => { console.log(data); })
+}*/
+
+/*function fetchSynonyms() {
+    var userSyn = document.getElementById('word_input').value;
+    console.log(userSyn);
+    document.getElementById("output_description").innerHTML = `Words with a similar meaning to ${userSyn}`;
+    //document.getElementById('word_output').innerHTML =
+    fetch('https://api.datamuse.com/words?rel_syn=' + userSyn)
+        .then(function (response) {
+            console.log("Response:", response)
+            return response.json();
+        })
+        .then(function (data) { console.log(data); })
+        .then(function (data) {
+            appendData(data);
+        })
+        .catch(function (err) {
+            console.log('error: ' + err);
+        });
+}
+
+function appendData(data) {
+    var container = document.getElementById('word_output');
+    for (var i = 0; i < data.length; i++) {
+        var div = document.createElement("div");
+        div.innerHTML = data[i].word;
+        container.appendChild(div);
+    }
+}*/
